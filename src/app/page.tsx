@@ -37,6 +37,10 @@ export default function HomePage() {
               label="Alumni Registration"
             />
             <NavButton href="/registrar" label="School Registrar" />
+            <NavButton
+              href="/alumni-discovery"
+              label="Find Alumni for Research"
+            />
             <NavButton href="/researchers" label="Our Team - The Researchers" />
           </div>
         </div>

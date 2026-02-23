@@ -58,7 +58,12 @@ export default function RegistrarPage() {
   const router = useRouter();
   const isAuthenticated = useAppStore((s) => s.isAuthenticated);
   const [activeTab, setActiveTab] = useState<
-    "pending" | "manage" | "add" | "consultation"
+    | "pending"
+    | "manage"
+    | "add"
+    | "consultation"
+    | "student-requests"
+    | "all-consultations"
   >("pending");
 
   // Pending approvals state
@@ -106,6 +111,14 @@ export default function RegistrarPage() {
   const [consultationHistory, setConsultationHistory] = useState<any[]>([]);
   const [consultationLoading, setConsultationLoading] = useState(false);
 
+  // Student consultation requests state
+  const [studentRequests, setStudentRequests] = useState<any[]>([]);
+  const [studentRequestsLoading, setStudentRequestsLoading] = useState(false);
+
+  // All consultation requests state
+  const [allConsultations, setAllConsultations] = useState<any[]>([]);
+  const [allConsultationsLoading, setAllConsultationsLoading] = useState(false);
+
   useEffect(() => {
     if (!isAuthenticated) {
       router.replace("/login?redirect=/registrar");
@@ -123,6 +136,18 @@ export default function RegistrarPage() {
   useEffect(() => {
     if (activeTab === "consultation" && isAuthenticated) {
       loadConsultationHistory();
+    }
+  }, [activeTab, isAuthenticated]);
+
+  useEffect(() => {
+    if (activeTab === "student-requests" && isAuthenticated) {
+      loadStudentRequests();
+    }
+  }, [activeTab, isAuthenticated]);
+
+  useEffect(() => {
+    if (activeTab === "all-consultations" && isAuthenticated) {
+      loadAllConsultations();
     }
   }, [activeTab, isAuthenticated]);
 
@@ -183,6 +208,208 @@ export default function RegistrarPage() {
       setMessage({ type: "error", text: "Error loading consultation history" });
     } finally {
       setConsultationLoading(false);
+    }
+  }
+
+  async function loadStudentRequests() {
+    try {
+      setStudentRequestsLoading(true);
+      const response = await fetch("/api/alumni/student-requests");
+      if (response.ok) {
+        const data = await response.json();
+        setStudentRequests(data);
+      } else {
+        setMessage({
+          type: "error",
+          text: "Failed to load student requests",
+        });
+      }
+    } catch (error) {
+      setMessage({ type: "error", text: "Error loading student requests" });
+    } finally {
+      setStudentRequestsLoading(false);
+    }
+  }
+
+  async function loadAllConsultations() {
+    try {
+      setAllConsultationsLoading(true);
+      const [consultationRes, approvedStudentRes] = await Promise.all([
+        fetch("/api/alumni/consultation"),
+        fetch("/api/alumni/student-requests?status=approved"),
+      ]);
+
+      let combined: any[] = [];
+
+      if (consultationRes.ok) {
+        const consultations = await consultationRes.json();
+        combined = combined.concat(
+          consultations.map((c: any) => ({
+            ...c,
+            type: "direct",
+            date: c.sentAt,
+          })),
+        );
+      }
+
+      if (approvedStudentRes.ok) {
+        const approvedRequests = await approvedStudentRes.json();
+        combined = combined.concat(
+          approvedRequests.map((r: any) => ({
+            ...r,
+            type: "student-initiated",
+            date: r.updatedAt || r.createdAt,
+          })),
+        );
+      }
+
+      // Sort by date descending
+      combined.sort((a, b) => {
+        const dateA = a.date?.seconds
+          ? a.date.seconds * 1000
+          : new Date(a.date).getTime();
+        const dateB = b.date?.seconds
+          ? b.date.seconds * 1000
+          : new Date(b.date).getTime();
+        return dateB - dateA;
+      });
+
+      setAllConsultations(combined);
+    } catch (error) {
+      setMessage({ type: "error", text: "Error loading consultations" });
+    } finally {
+      setAllConsultationsLoading(false);
+    }
+  }
+
+  async function handleApproveStudentRequest(
+    requestId: string,
+    alumniEmail: string,
+    alumniName: string,
+    studentName: string,
+    studentEmail: string,
+    researchTitle: string,
+    consultationNeeds: string,
+  ) {
+    setProcessingId(requestId);
+    setMessage(null);
+
+    try {
+      // Send email to alumni
+      const emailResponse = await fetch("/api/alumni/send-student-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          alumniEmail,
+          alumniName,
+          studentName,
+          studentEmail,
+          researchTitle,
+          consultationNeeds,
+        }),
+      });
+
+      if (!emailResponse.ok) {
+        const errorData = await emailResponse.json();
+        setMessage({
+          type: "error",
+          text: errorData.error || "Failed to send email to alumni",
+        });
+        setProcessingId(null);
+        return;
+      }
+
+      // Update request status to approved
+      const updateResponse = await fetch("/api/alumni/student-requests", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          requestId,
+          status: "approved",
+        }),
+      });
+
+      if (updateResponse.ok) {
+        // Also save to consultation history so it appears in Recent Requests
+        await fetch("/api/alumni/consultation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            alumniId: "student-request", // Mark as student-initiated
+            studentName,
+            studentEmail,
+            researchTitle,
+            researchDescription: "",
+            consultationNeeds,
+            alumniName,
+            alumniEmail,
+            senderName: "School Registrar",
+            sentAt: new Date().toISOString(),
+          }),
+        }).catch((err) =>
+          console.error("Failed to add to consultation history:", err),
+        );
+
+        setMessage({
+          type: "success",
+          text: "Request approved and email sent to alumni successfully!",
+        });
+        loadStudentRequests(); // Refresh list
+      } else {
+        setMessage({
+          type: "error",
+          text: "Email sent but failed to update status",
+        });
+      }
+    } catch (error) {
+      setMessage({ type: "error", text: "Error processing request" });
+    } finally {
+      setProcessingId(null);
+    }
+  }
+
+  async function handleRejectStudentRequest(
+    requestId: string,
+    studentName: string,
+  ) {
+    if (
+      !confirm(
+        `Are you sure you want to reject this request from ${studentName}?`,
+      )
+    ) {
+      return;
+    }
+
+    setProcessingId(requestId);
+    setMessage(null);
+
+    try {
+      const response = await fetch("/api/alumni/student-requests", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          requestId,
+          status: "rejected",
+        }),
+      });
+
+      if (response.ok) {
+        setMessage({
+          type: "success",
+          text: "Request rejected successfully",
+        });
+        loadStudentRequests(); // Refresh list
+      } else {
+        const errorData = await response.json();
+        setMessage({
+          type: "error",
+          text: errorData.error || "Failed to reject request",
+        });
+      }
+    } catch (error) {
+      setMessage({ type: "error", text: "Error rejecting request" });
+    } finally {
+      setProcessingId(null);
     }
   }
 
@@ -543,6 +770,26 @@ export default function RegistrarPage() {
               }`}
             >
               Research Consultation
+            </button>
+            <button
+              onClick={() => setActiveTab("student-requests")}
+              className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                activeTab === "student-requests"
+                  ? "border-[#B23B3B] text-[#B23B3B]"
+                  : "border-transparent text-[#A03E2D]/60 hover:text-[#A03E2D]"
+              }`}
+            >
+              Student Requests ({studentRequests.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("all-consultations")}
+              className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                activeTab === "all-consultations"
+                  ? "border-[#B23B3B] text-[#B23B3B]"
+                  : "border-transparent text-[#A03E2D]/60 hover:text-[#A03E2D]"
+              }`}
+            >
+              All Consultations ({allConsultations.length})
             </button>
           </div>
         </div>
@@ -1266,6 +1513,304 @@ export default function RegistrarPage() {
                   </div>
                 </div>
               </div>
+            </>
+          )}
+
+          {/* Student Requests Tab */}
+          {activeTab === "student-requests" && (
+            <>
+              <div className="mb-6 flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-[#B23B3B]">
+                  Student Alumni Requests ({studentRequests.length})
+                </h2>
+                <button
+                  onClick={loadStudentRequests}
+                  disabled={studentRequestsLoading}
+                  className="rounded-lg bg-[#FF7F27] px-4 py-2 text-white font-medium hover:bg-[#E85D04] disabled:opacity-50 transition-colors duration-200"
+                >
+                  {studentRequestsLoading ? "Loading..." : "Refresh"}
+                </button>
+              </div>
+
+              <p className="text-[#A03E2D] mb-6">
+                View all student consultation requests. Manage pending requests,
+                view approved ones that have been sent to alumni, or review
+                rejected requests.
+              </p>
+
+              {studentRequestsLoading ? (
+                <div className="text-center py-12">
+                  <p className="text-[#A03E2D]">Loading student requests...</p>
+                </div>
+              ) : studentRequests.length === 0 ? (
+                <div className="rounded-2xl border-2 border-[#A03E2D] bg-[#FDF4DD] p-12 text-center">
+                  <p className="text-lg font-medium text-[#A03E2D]">
+                    📭 No student requests yet
+                  </p>
+                  <p className="mt-2 text-sm text-[#A03E2D]/80">
+                    Student requests will appear here once they submit them.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {studentRequests.map((request) => (
+                    <div
+                      key={request.id}
+                      className="rounded-xl border-2 border-[#A03E2D] bg-white p-6 shadow-lg hover:shadow-xl transition-shadow"
+                    >
+                      <div className="mb-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <h3 className="text-lg font-bold text-[#B23B3B]">
+                            {request.researchTitle}
+                          </h3>
+                          <span
+                            className={`text-xs px-3 py-1 rounded-full font-medium ${
+                              request.status === "pending"
+                                ? "bg-blue-100 text-blue-800"
+                                : request.status === "approved"
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {request.status === "pending"
+                              ? "⏳ Pending"
+                              : request.status === "approved"
+                                ? "✅ Approved"
+                                : "❌ Rejected"}
+                          </span>
+                        </div>
+                        <p className="text-sm text-[#A03E2D]/80 mb-3">
+                          {request.researchDescription}
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div className="rounded-lg bg-gray-50 p-3">
+                          <p className="text-xs text-[#A03E2D]/70 font-medium mb-1">
+                            Student
+                          </p>
+                          <p className="font-semibold text-[#B23B3B] text-sm">
+                            {request.studentName}
+                          </p>
+                          <p className="text-xs text-[#A03E2D] mt-1">
+                            {request.studentEmail}
+                          </p>
+                          {request.studentContact && (
+                            <p className="text-xs text-[#A03E2D] mt-1">
+                              {request.studentContact}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="rounded-lg bg-gray-50 p-3">
+                          <p className="text-xs text-[#A03E2D]/70 font-medium mb-1">
+                            Requested Alumni
+                          </p>
+                          <p className="font-semibold text-[#B23B3B] text-sm">
+                            {request.alumniName}
+                          </p>
+                          <p className="text-xs text-[#A03E2D] mt-1">
+                            {request.alumniEmail}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mb-4 rounded-lg bg-[#FDF4DD] p-3 border border-[#FF7F27]/20">
+                        <p className="text-xs text-[#A03E2D]/70 font-medium mb-1">
+                          What They Need
+                        </p>
+                        <p className="text-sm text-[#A03E2D]">
+                          {request.consultationNeeds}
+                        </p>
+                      </div>
+
+                      <div className="flex gap-3">
+                        {request.status === "pending" ? (
+                          <>
+                            <button
+                              onClick={() =>
+                                handleApproveStudentRequest(
+                                  request.id,
+                                  request.alumniEmail,
+                                  request.alumniName,
+                                  request.studentName,
+                                  request.studentEmail,
+                                  request.researchTitle,
+                                  request.consultationNeeds,
+                                )
+                              }
+                              disabled={processingId === request.id}
+                              className="flex-1 rounded-lg bg-green-600 px-4 py-2 text-white font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                            >
+                              {processingId === request.id
+                                ? "Approving..."
+                                : "✓ Approve & Email Alumni"}
+                            </button>
+                            <button
+                              onClick={() =>
+                                handleRejectStudentRequest(
+                                  request.id,
+                                  request.studentName,
+                                )
+                              }
+                              disabled={processingId === request.id}
+                              className="rounded-lg border-2 border-red-500 text-red-600 px-4 py-2 font-medium hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                            >
+                              {processingId === request.id
+                                ? "Rejecting..."
+                                : "✗ Reject"}
+                            </button>
+                          </>
+                        ) : request.status === "approved" ? (
+                          <div className="w-full rounded-lg bg-green-50 border-2 border-green-300 p-3 text-center">
+                            <p className="text-sm font-medium text-green-800">
+                              ✅ Approved & Email sent to alumni
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="w-full rounded-lg bg-red-50 border-2 border-red-300 p-3 text-center">
+                            <p className="text-sm font-medium text-red-800">
+                              ❌ Rejected
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* All Consultations Tab */}
+          {activeTab === "all-consultations" && (
+            <>
+              <div className="mb-6 flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-[#B23B3B]">
+                  All Consultation Requests ({allConsultations.length})
+                </h2>
+                <button
+                  onClick={loadAllConsultations}
+                  disabled={allConsultationsLoading}
+                  className="rounded-lg bg-[#FF7F27] px-4 py-2 text-white font-medium hover:bg-[#E85D04] disabled:opacity-50 transition-colors duration-200"
+                >
+                  {allConsultationsLoading ? "Loading..." : "Refresh"}
+                </button>
+              </div>
+
+              <p className="text-[#A03E2D] mb-6">
+                View all consultation requests to alumni, including both direct
+                registrar requests and student-initiated requests that have been
+                approved.
+              </p>
+
+              {allConsultationsLoading ? (
+                <div className="text-center py-12">
+                  <p className="text-[#A03E2D]">Loading consultations...</p>
+                </div>
+              ) : allConsultations.length === 0 ? (
+                <div className="rounded-2xl border-2 border-[#A03E2D] bg-[#FDF4DD] p-12 text-center">
+                  <p className="text-lg font-medium text-[#A03E2D]">
+                    📭 No consultation requests yet
+                  </p>
+                  <p className="mt-2 text-sm text-[#A03E2D]/80">
+                    Consultation requests will appear here once they are sent or
+                    approved.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {allConsultations.map((request) => (
+                    <div
+                      key={request.id}
+                      className="rounded-xl border-2 border-[#A03E2D] bg-white p-6 shadow-lg hover:shadow-xl transition-shadow"
+                    >
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-bold text-[#B23B3B] mb-2">
+                            {request.researchTitle}
+                          </h3>
+                          {request.researchDescription && (
+                            <p className="text-sm text-[#A03E2D]/80 mb-3">
+                              {request.researchDescription}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <span
+                            className={`text-xs px-3 py-1 rounded-full font-medium ${
+                              request.type === "direct"
+                                ? "bg-purple-100 text-purple-800"
+                                : "bg-blue-100 text-blue-800"
+                            }`}
+                          >
+                            {request.type === "direct"
+                              ? "Direct Request"
+                              : "Student Initiated"}
+                          </span>
+                          <span className="text-xs bg-green-100 text-green-800 px-3 py-1 rounded-full font-medium">
+                            Approved ✓
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div className="rounded-lg bg-gray-50 p-4">
+                          <p className="text-xs text-[#A03E2D]/70 font-medium mb-2">
+                            Student
+                          </p>
+                          <p className="font-semibold text-[#B23B3B]">
+                            {request.studentName}
+                          </p>
+                          <p className="text-sm text-[#A03E2D] mt-1">
+                            {request.studentEmail}
+                          </p>
+                          {request.studentContact && (
+                            <p className="text-sm text-[#A03E2D] mt-1">
+                              {request.studentContact}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="rounded-lg bg-gray-50 p-4">
+                          <p className="text-xs text-[#A03E2D]/70 font-medium mb-2">
+                            Alumni
+                          </p>
+                          <p className="font-semibold text-[#B23B3B]">
+                            {request.alumniName}
+                          </p>
+                          <p className="text-sm text-[#A03E2D] mt-1">
+                            {request.alumniEmail}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mb-4 rounded-lg bg-[#FDF4DD] p-4 border border-[#FF7F27]/20">
+                        <p className="text-xs text-[#A03E2D]/70 font-medium mb-2">
+                          Consultation Needs
+                        </p>
+                        <p className="text-sm text-[#A03E2D]">
+                          {request.consultationNeeds}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-4 border-t border-[#A03E2D]/20 text-xs text-[#A03E2D]/70">
+                        <span>
+                          📧 Sent on{" "}
+                          {request.date?.seconds
+                            ? new Date(
+                                request.date.seconds * 1000,
+                              ).toLocaleDateString()
+                            : "Recently"}
+                        </span>
+                        {request.expectedDuration && (
+                          <span>⏱️ Expected: {request.expectedDuration}</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </>
           )}
         </div>
