@@ -1,0 +1,38 @@
+{
+  "name": "alumni-tracking-website",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test-firebase": "ts-node scripts/test-firebase-connection.ts",
+    "migrate-csv": "ts-node scripts/migrate-csv-to-firebase.ts",
+    "update-alumni-status": "ts-node scripts/update-alumni-status.ts",
+    "add-email-fields": "ts-node scripts/add-email-fields.ts"
+  },
+  "dependencies": {
+    "brevo": "^1.0.0",
+    "dotenv": "^16.6.1",
+    "firebase": "^12.9.0",
+    "next": "^14.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "xlsx": "^0.18.5",
+    "zustand": "^4.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "autoprefixer": "^10.4.0",
+    "eslint": "^8.0.0",
+    "eslint-config-next": "^14.2.0",
+    "postcss": "^8.4.0",
+    "tailwindcss": "^3.4.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  }
+}
