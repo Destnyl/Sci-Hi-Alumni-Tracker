@@ -55,7 +55,7 @@ export default function StemPage() {
     <div className="flex min-h-screen flex-col bg-checkered">
       <HeaderBar title="Tracking Records for Alumni Contact & Engagement for School Administration" />
       <main className="flex flex-1 flex-col items-center justify-center px-6 py-12">
-        <div className="w-full max-w-3xl rounded-2xl border-2 border-[#B23B3B] bg-white/95 backdrop-blur-sm p-8 shadow-xl shadow-brand-lg animate-fade-in animate-slide-in-from-bottom">
+        <div className="w-full max-w-3xl rounded-2xl border-2 border-[#B23B3B] bg-white/95 backdrop-blur-sm p-8 shadow-xl shadow-brand-lg animate-fade-in">
           <h2 className="mb-6 text-center text-2xl font-bold text-[#B23B3B] text-shadow">
             STEM — Alumni List & Contact Information
           </h2>

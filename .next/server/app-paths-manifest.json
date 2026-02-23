@@ -1,7 +1,16 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
-  "/trace/abm/page": "app/trace/abm/page.js",
   "/alumni-registration/page": "app/alumni-registration/page.js",
+  "/api/alumni/consultation/route": "app/api/alumni/consultation/route.js",
+  "/api/alumni/manage/route": "app/api/alumni/manage/route.js",
+  "/page": "app/page.js",
+  "/api/alumni/pending/route": "app/api/alumni/pending/route.js",
+  "/api/alumni/route": "app/api/alumni/route.js",
+  "/login/page": "app/login/page.js",
+  "/researchers/page": "app/researchers/page.js",
+  "/api/test-firebase/route": "app/api/test-firebase/route.js",
+  "/trace/page": "app/trace/page.js",
+  "/trace/abm/page": "app/trace/abm/page.js",
   "/registrar/page": "app/registrar/page.js",
-  "/page": "app/page.js"
+  "/trace/stem/page": "app/trace/stem/page.js"
 }

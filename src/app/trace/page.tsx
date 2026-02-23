@@ -10,7 +10,7 @@ export default function TracePage() {
       <HeaderBar title="Tracking Records for Alumni Contact & Engagement for School Administration" />
 
       <main className="flex flex-1 flex-col items-center justify-center px-6 py-12">
-        <div className="w-full max-w-2xl rounded-2xl border-2 border-[#B23B3B] bg-white/95 backdrop-blur-sm p-8 shadow-xl shadow-brand-lg animate-fade-in animate-slide-in-from-bottom">
+        <div className="w-full max-w-2xl rounded-2xl border-2 border-[#B23B3B] bg-white/95 backdrop-blur-sm p-8 shadow-xl shadow-brand-lg animate-fade-in">
           <Link
             href="/trace"
             className="group mb-8 block w-full rounded-xl bg-gradient-to-r from-[#FF7F27] via-[#FF6B1A] to-[#E85D04] py-5 text-center text-lg font-bold text-white shadow-lg shadow-orange-500/30 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-orange-500/40"

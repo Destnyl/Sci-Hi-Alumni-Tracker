@@ -18,7 +18,7 @@ export default function HomePage() {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-green-900/20 to-transparent" />
         <div className="relative z-10 flex min-h-[220px] items-center px-6 py-10">
-          <div className="animate-fade-in animate-slide-in-from-left">
+          <div className="animate-fade-in">
             <BrandBox />
           </div>
         </div>
@@ -26,7 +26,7 @@ export default function HomePage() {
 
       {/* Main content */}
       <main className="flex flex-1 flex-col items-center justify-center bg-gradient-to-b from-white to-gray-50 px-6 py-12">
-        <div className="w-full max-w-md rounded-2xl border-2 border-[#A03E2D] bg-gradient-to-br from-[#FDF4DD] to-white p-8 shadow-xl shadow-brand-lg animate-fade-in animate-slide-in-from-bottom">
+        <div className="w-full max-w-md rounded-2xl border-2 border-[#A03E2D] bg-gradient-to-br from-[#FDF4DD] to-white p-8 shadow-xl shadow-brand-lg animate-fade-in">
           <h2 className="mb-8 text-center text-2xl font-bold text-[#A03E2D] text-shadow">
             Home
           </h2>

@@ -10,7 +10,7 @@ const PLACEHOLDER_PASSWORD = "registrar"; // for demo only
 function LoginForm() {
   const router = useRouter();
   const [redirect, setRedirect] = useState("/");
-  
+
   useEffect(() => {
     // Get redirect from URL search params on client side
     if (typeof window !== "undefined") {
@@ -42,24 +42,28 @@ function LoginForm() {
       <div
         className="absolute inset-0 bg-cover bg-center blur-lg scale-110 transition-transform duration-[20s] ease-in-out"
         style={{
-          backgroundImage: "url('https://images.unsplash.com/photo-1562774053-701939374585?w=1200')",
+          backgroundImage:
+            "url('https://images.unsplash.com/photo-1562774053-701939374585?w=1200')",
         }}
       />
       <div className="absolute inset-0 bg-gradient-to-b from-green-900/40 via-green-800/30 to-green-900/40" />
 
       {/* Content */}
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-12">
-        <div className="mb-10 animate-fade-in animate-slide-in-from-top">
+        <div className="mb-10 animate-fade-in">
           <BrandBox showIcon />
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="flex w-full max-w-md flex-col items-center gap-5 animate-fade-in animate-slide-in-from-bottom"
+          className="flex w-full max-w-md flex-col items-center gap-5 animate-fade-in"
           style={{ animationDelay: "150ms" }}
         >
           <div className="flex w-full flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <label htmlFor="password" className="shrink-0 text-[#A03E2D] font-bold text-lg text-shadow">
+            <label
+              htmlFor="password"
+              className="shrink-0 text-[#A03E2D] font-bold text-lg text-shadow"
+            >
               Password:
             </label>
             <input
@@ -73,7 +77,7 @@ function LoginForm() {
             />
           </div>
           {error && (
-            <p className="animate-fade-in animate-slide-in-from-top text-sm font-medium text-red-600 drop-shadow">
+            <p className="animate-fade-in text-sm font-medium text-red-600 drop-shadow">
               {error}
             </p>
           )}
@@ -87,8 +91,12 @@ function LoginForm() {
           </button>
         </form>
 
-        <p className="mt-10 max-w-sm text-center text-sm font-medium text-white/95 text-shadow-lg animate-fade-in" style={{ animationDelay: "300ms", animationDuration: "1000ms" }}>
-          *ONLY PROVIDED BY <strong className="font-bold">SCHOOL</strong> <strong className="font-bold">REGISTRAR</strong> ONLY
+        <p
+          className="mt-10 max-w-sm text-center text-sm font-medium text-white/95 text-shadow-lg animate-fade-in"
+          style={{ animationDelay: "300ms", animationDuration: "1000ms" }}
+        >
+          *ONLY PROVIDED BY <strong className="font-bold">SCHOOL</strong>{" "}
+          <strong className="font-bold">REGISTRAR</strong> ONLY
         </p>
       </div>
     </div>

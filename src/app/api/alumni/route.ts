@@ -7,7 +7,8 @@ import {
   where, 
   orderBy,
   serverTimestamp,
-  Timestamp
+  Timestamp,
+  FieldValue
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
@@ -18,9 +19,11 @@ export type AlumniData = {
   collegeCourse: string;
   currentOccupation: string;
   credentialsInField?: string;
+  email?: string;
+  emailVerified?: boolean;
   status: 'pending' | 'approved' | 'rejected';
-  createdAt?: Timestamp;
-  updatedAt?: Timestamp;
+  createdAt?: Timestamp | FieldValue;
+  updatedAt?: Timestamp | FieldValue;
   reviewedAt?: Timestamp;
   reviewedBy?: string;
 };
@@ -71,6 +74,8 @@ export async function GET(request: Request) {
         collegeCourse: data.collegeCourse,
         currentOccupation: data.currentOccupation,
         credentialsInField: data.credentialsInField || '',
+        email: data.email || '',
+        status: data.status || 'approved',
         createdAt: data.createdAt,
         updatedAt: data.updatedAt,
       });
@@ -80,7 +85,11 @@ export async function GET(request: Request) {
     if (strand) {
       alumni.sort((a, b) => {
         if (!a.createdAt || !b.createdAt) return 0;
-        return b.createdAt.seconds - a.createdAt.seconds;
+        // Only sort if both are Timestamp objects (have seconds property)
+        if ('seconds' in a.createdAt && 'seconds' in b.createdAt) {
+          return (b.createdAt as Timestamp).seconds - (a.createdAt as Timestamp).seconds;
+        }
+        return 0;
       });
       console.log('✅ Alumni API: Client-side sorting applied');
     }
