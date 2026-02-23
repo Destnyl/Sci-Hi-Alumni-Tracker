@@ -1,14 +1,31 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { HeaderBar } from "@/components/HeaderBar";
 import { FooterNav } from "@/components/FooterNav";
 
 const RESEARCHERS = [
-  { name: "Giselle Ann B. Reyes", slug: "reyes" },
-  { name: "Jean Krisha A. Dela Peña", slug: "dela-pena" },
-  { name: "Micah Veronica R. Duldulao", slug: "duldulao" },
-  { name: "Jose Caleb A. Valenzuela", slug: "valenzuela" },
+  {
+    name: "Giselle Ann B. Reyes",
+    slug: "reyes",
+    image: "/researchers/giselle.png",
+  },
+  {
+    name: "Jean Krisha A. Dela Peña",
+    slug: "dela-pena",
+    image: "/researchers/krisha.png",
+  },
+  {
+    name: "Micah Veronica R. Duldulao",
+    slug: "duldulao",
+    image: "/researchers/jose.png",
+  },
+  {
+    name: "Jose Caleb A. Valenzuela",
+    slug: "valenzuela",
+    image: "/researchers/micah.png",
+  },
 ];
 
 export default function ResearchersPage() {
@@ -19,7 +36,9 @@ export default function ResearchersPage() {
       <main className="flex flex-1 flex-col items-center px-6 py-12">
         <div className="w-full max-w-4xl rounded-2xl border-2 border-[#A03E2D] bg-gradient-to-br from-[#FDF4DD] to-white p-6 shadow-xl shadow-brand-lg sm:p-8 animate-fade-in animate-slide-in-from-bottom">
           <div className="mb-10 rounded-xl border-2 border-[#B23B3B] bg-gradient-to-r from-[#FF7F27] to-[#E85D04] py-4 text-center shadow-md">
-            <h2 className="text-xl font-bold text-white text-shadow-lg">About the Researchers</h2>
+            <h2 className="text-xl font-bold text-white text-shadow-lg">
+              About the Researchers
+            </h2>
           </div>
 
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
@@ -30,9 +49,12 @@ export default function ResearchersPage() {
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <div className="relative aspect-square w-full max-w-[160px] overflow-hidden rounded-xl border-2 border-[#B23B3B] bg-gradient-to-br from-gray-200 to-gray-300 shadow-md transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl">
-                  <div
-                    className="h-full w-full bg-gradient-to-br from-gray-300 via-gray-200 to-gray-400"
-                    aria-hidden
+                  <Image
+                    src={r.image}
+                    alt={r.name}
+                    fill
+                    className="object-cover"
+                    sizes="160px"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                 </div>
