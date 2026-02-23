@@ -1,13 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { collection, doc, getDoc, addDoc, Timestamp, query, where, orderBy, getDocs } from 'firebase/firestore';
-import * as SibApiV3Sdk from 'brevo';
-
-// Initialize Brevo
-const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
-if (process.env.BREVO_API_KEY) {
-  apiInstance.setApiKey(SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
-}
 
 // POST - Send consultation request email
 export async function POST(request: NextRequest) {
@@ -158,14 +151,31 @@ export async function POST(request: NextRequest) {
       </div>
     `;
 
-    // Send email using Brevo
+    // Send email using Brevo API
     try {
-      await apiInstance.sendTransacEmail({
-        to: [{ email: alumniData.email }],
-        sender: { name: 'Alumni Research', email: 'noreply@alumni.scihi.com' },
-        subject: `Research Consultation Request - ${researchTitle}`,
-        htmlContent: emailHTML,
+      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'api-key': process.env.BREVO_API_KEY || '',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: [{ email: alumniData.email }],
+          sender: { name: 'Alumni Research', email: 'noreply@alumni.scihi.com' },
+          subject: `Research Consultation Request - ${researchTitle}`,
+          htmlContent: emailHTML,
+        }),
       });
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Error sending email via Brevo:', error);
+        return NextResponse.json(
+          { error: 'Failed to send consultation request email', details: error.message || 'Unknown error' },
+          { status: 500 }
+        );
+      }
     } catch (emailError: any) {
       console.error('Error sending email via Brevo:', emailError);
       return NextResponse.json(
