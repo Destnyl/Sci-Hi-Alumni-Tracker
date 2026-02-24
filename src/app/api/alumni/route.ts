@@ -63,10 +63,12 @@ export async function GET(request: Request) {
 
       console.log('🔍 Alumni API: Executing Firestore query...');
       const querySnapshot = await getDocs(firestoreQuery);
+      console.log(`🔍 Alumni API: Query returned ${querySnapshot.size} documents`);
       
       let alumni: AlumniData[] = [];
       querySnapshot.forEach((doc) => {
         const data = doc.data();
+        console.log(`🔍 Alumni API: Processing document ${doc.id}:`, data);
         alumni.push({
           id: doc.id,
           name: data.name,
@@ -80,6 +82,8 @@ export async function GET(request: Request) {
           updatedAt: data.updatedAt,
         });
       });
+
+      console.log(`✅ Alumni API: Processed ${alumni.length} records`);
 
       // Sort by creation date (newest first)
       alumni.sort((a, b) => {

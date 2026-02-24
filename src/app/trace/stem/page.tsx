@@ -8,6 +8,7 @@ type Alumni = {
   id?: string;
   name: string;
   strand: string;
+  shsSection?: string;
   collegeCourse: string;
   currentOccupation: string;
   credentialsInField?: string;

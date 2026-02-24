@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc, serverTimestamp, connectFirestoreEmulator, getDocs } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, serverTimestamp, connectFirestoreEmulator, getDocs, doc, deleteDoc, query, where } from 'firebase/firestore';
 import * as XLSX from 'xlsx';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -34,8 +34,8 @@ const db = getFirestore(app);
 type CSVAlumni = {
   Name?: string;
   Strand?: string;
+  SHSSection?: string;
   CollegeCourse?: string;
-  CurrentOccupation?: string;
   CredentialsInField?: string;
 };
 
@@ -59,6 +59,24 @@ async function migrateCsvToFirebase() {
         return;
       }
       throw error;
+    }
+
+    // Clear existing CSV migrated records
+    console.log('🧹 Clearing previous CSV migrated data...');
+    try {
+      const alumniRef = collection(db, 'alumni');
+      const csvMigratedQuery = query(alumniRef, where('reviewedBy', '==', 'CSV Migration'));
+      const existingDocs = await getDocs(csvMigratedQuery);
+      let deletedCount = 0;
+      for (const doc of existingDocs.docs) {
+        await deleteDoc(doc.ref);
+        deletedCount++;
+      }
+      if (deletedCount > 0) {
+        console.log(`✓ Deleted ${deletedCount} previous CSV migrated records`);
+      }
+    } catch (error) {
+      console.warn('⚠️  Could not clear previous records (may be first run):', error);
     }
     
     // Read the CSV file
@@ -96,8 +114,9 @@ async function migrateCsvToFirebase() {
         const firestoreAlumni = {
           name: alumni.Name,
           strand: alumni.Strand || '',
+          shsSection: alumni.SHSSection || '',
           collegeCourse: alumni.CollegeCourse || '',
-          currentOccupation: alumni.CurrentOccupation || '',
+          currentOccupation: alumni.CredentialsInField || '',
           credentialsInField: alumni.CredentialsInField || '',
           status: 'approved', // Existing CSV data is auto-approved
           createdAt: serverTimestamp(),

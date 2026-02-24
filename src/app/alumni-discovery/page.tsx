@@ -8,6 +8,7 @@ type Alumni = {
   id: string;
   name: string;
   strand: string;
+  shsSection?: string;
   collegeCourse: string;
   currentOccupation: string;
   credentialsInField?: string;
@@ -50,21 +51,43 @@ export default function AlumniDiscoveryPage() {
   useEffect(() => {
     async function loadAlumni() {
       try {
+        console.log("📍 Alumni Discovery: Fetching alumni from API...");
         const response = await fetch("/api/alumni");
+        console.log(
+          "📍 Alumni Discovery: API response status:",
+          response.status,
+        );
+
         if (response.ok) {
           const data = await response.json();
+          console.log("📍 Alumni Discovery: Received data:", {
+            count: data.length,
+            data,
+          });
           setAlumni(data);
+
+          if (data.length === 0) {
+            setMessage({
+              type: "error",
+              text: "No alumni records found in the database. Please check if the CSV migration was successful.",
+            });
+          }
         } else {
           const errorData = await response.json();
-          console.error("API Error:", errorData);
+          console.error("❌ API Error:", errorData);
           setMessage({
             type: "error",
-            text: errorData.error || "Failed to load alumni list",
+            text:
+              errorData.error ||
+              `API Error: ${response.status} - Failed to load alumni list`,
           });
         }
       } catch (error) {
-        console.error("Error loading alumni:", error);
-        setMessage({ type: "error", text: "Error loading alumni" });
+        console.error("❌ Error loading alumni:", error);
+        setMessage({
+          type: "error",
+          text: `Connection Error: ${error instanceof Error ? error.message : "Failed to load alumni"}`,
+        });
       } finally {
         setLoading(false);
       }
@@ -220,14 +243,21 @@ export default function AlumniDiscoveryPage() {
               {loading ? (
                 <div className="text-center py-12">
                   <p className="text-[#A03E2D]">Loading alumni...</p>
+                  <p className="text-sm text-[#A03E2D]/70 mt-2">
+                    Check browser console for details
+                  </p>
                 </div>
               ) : filteredAlumni.length === 0 ? (
                 <div className="rounded-2xl border-2 border-[#A03E2D] bg-[#FDF4DD] p-12 text-center">
                   <p className="text-lg font-medium text-[#A03E2D]">
-                    No alumni found
+                    {alumni.length === 0
+                      ? "No alumni records found in database"
+                      : "No alumni match your search"}
                   </p>
                   <p className="mt-2 text-sm text-[#A03E2D]/80">
-                    Try adjusting your search terms
+                    {alumni.length === 0
+                      ? "The alumni database is empty. Please run the CSV migration script first."
+                      : "Try adjusting your search terms"}
                   </p>
                 </div>
               ) : (
@@ -240,6 +270,11 @@ export default function AlumniDiscoveryPage() {
                       <h3 className="text-lg font-bold text-[#B23B3B] mb-2">
                         {alumnus.name}
                       </h3>
+                      {alumnus.shsSection && (
+                        <p className="text-xs text-[#A03E2D]/70 mb-2">
+                          {alumnus.shsSection}
+                        </p>
+                      )}
                       <p className="text-sm text-[#A03E2D] mb-2">
                         <strong>Field:</strong> {alumnus.collegeCourse}
                       </p>
@@ -261,7 +296,9 @@ export default function AlumniDiscoveryPage() {
                             : "bg-[#B23B3B] text-white hover:bg-[#8B2E2E]"
                         }`}
                       >
-                        {!alumnus.email ? "No Email" : "Request as Consultant"}
+                        {!alumnus.email
+                          ? "Email needed"
+                          : "Request as Consultant"}
                       </button>
                     </div>
                   ))}
