@@ -1106,9 +1106,6 @@ export default function RegistrarPage() {
                         <option value="">Select strand</option>
                         <option value="ABM">ABM</option>
                         <option value="STEM">STEM</option>
-                        <option value="HUMSS">HUMSS</option>
-                        <option value="GAS">GAS</option>
-                        <option value="TVL">TVL</option>
                       </select>
                     </div>
 

@@ -163,10 +163,6 @@ export default function AlumniRegistrationPage() {
                 <option value="STEM">
                   STEM (Science, Technology, Engineering and Mathematics)
                 </option>
-                <option value="HUMSS">
-                  HUMSS (Humanities and Social Sciences)
-                </option>
-                <option value="GAS">GAS (General Academic Strand)</option>
               </select>
             </div>
 
