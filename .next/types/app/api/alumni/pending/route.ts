@@ -1,4 +1,4 @@
-// File: C:\Users\adestajo\Desktop\REPO\New folder\Alumni Tracking Website\src\app\api\alumni\pending\route.ts
+// File: C:\Users\desta\Documents\My Documents\Projects\Sci-Hi-Alumni-Tracker\src\app\api\alumni\pending\route.ts
 import * as entry from '../../../../../../src/app/api/alumni/pending/route.js'
 import type { NextRequest } from 'next/server.js'
 

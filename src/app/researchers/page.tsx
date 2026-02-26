@@ -19,12 +19,12 @@ const RESEARCHERS = [
   {
     name: "Micah Veronica R. Duldulao",
     slug: "duldulao",
-    image: "/researchers/jose.png",
+    image: "/researchers/micah.png",
   },
   {
     name: "Jose Caleb A. Valenzuela",
     slug: "valenzuela",
-    image: "/researchers/micah.png",
+    image: "/researchers/jose.png",
   },
 ];
 
