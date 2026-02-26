@@ -110,8 +110,15 @@ export default function StemPage() {
                     </th>
                   </tr>
                 </thead>
+                {!loading && alumni.length === 0 && (
+                  <tbody className="text-center text-[#A03E2D]">
+                    <tr >
+                      <td colSpan={5} className="p-8">No alumni data available</td>
+                    </tr>
+                  </tbody>
+                )}
                 <tbody className="divide-y divide-[#FEEBC8]/60">
-                  {alumni.map((a, idx) => (
+                  { alumni.length > 0 && alumni.map((a, idx) => (
                     <tr key={a.id || idx} className="hover:bg-[#FDF4DD]/60">
                       <td className="px-3 py-2 text-[#8B2E2E] font-medium">
                         {a.name}

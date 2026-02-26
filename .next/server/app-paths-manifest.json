@@ -1,8 +1,6 @@
 {
   "/page": "app/page.js",
-  "/api/alumni/consultation/route": "app/api/alumni/consultation/route.js",
-  "/api/alumni/manage/route": "app/api/alumni/manage/route.js",
-  "/login/page": "app/login/page.js",
-  "/api/alumni/pending/route": "app/api/alumni/pending/route.js",
-  "/registrar/page": "app/registrar/page.js"
+  "/trace/stem/page": "app/trace/stem/page.js",
+  "/trace/abm/page": "app/trace/abm/page.js",
+  "/api/alumni/route": "app/api/alumni/route.js"
 }
