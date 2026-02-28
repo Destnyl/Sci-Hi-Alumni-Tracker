@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
         },
         body: JSON.stringify({
           to: [{ email: alumniData.email }],
-          sender: { name: 'Alumni Research', email: 'noreply@alumni.scihi.com' },
+          sender: { name: 'Alumni Research', email: 'andrealyndestajo@gmail.com' },
           subject: `Research Consultation Request - ${researchTitle}`,
           htmlContent: emailHTML,
         }),
